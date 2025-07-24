@@ -9,7 +9,6 @@ export default function WelcomeScreen() {
     return (
         <PaperProvider>
             <View style={{ flex: 1, backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 40 }}>
-
                 {/* Top Image */}
                 <View style={{ flex: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
                     <Image
@@ -39,10 +38,10 @@ export default function WelcomeScreen() {
                                 marginRight: 10,
                                 borderRadius: 30,
                                 backgroundColor: '#008122',
-                                elevation: 0, // Remove shadow (optional)
+                                elevation: 0,
                             }}
                             contentStyle={{
-                                height: 50, // Match original
+                                height: 50,
                                 justifyContent: 'center',
                             }}
                             labelStyle={{
@@ -54,10 +53,9 @@ export default function WelcomeScreen() {
                             Login
                         </Button>
 
-
                         <Button
                             mode="contained"
-                            onPress={() => router.replace('/(tabs)')}
+                            onPress={() => router.push('/signup')} // ✅ Go to Signup Step 1
                             style={{
                                 flex: 1,
                                 marginLeft: 10,

@@ -20,8 +20,14 @@ export default function Layout() {
           headerShown: false,
           presentation: 'card',
           animationTypeForReplace: 'push',
-          gestureEnabled: true,
-          gestureDirection: 'horizontal',
+        }}
+      />
+      <Stack.Screen
+        name="signup"
+        options={{
+          headerShown: false,
+          presentation: 'card',
+          animationTypeForReplace: 'push',
         }}
       />
       <Stack.Screen
