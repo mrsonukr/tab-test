@@ -1,183 +1,126 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import {
-    Alert,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
-    StyleSheet,
-    ActivityIndicator as RNActivityIndicator,
-} from 'react-native';
-import { Button, Provider as PaperProvider } from 'react-native-paper';
 
-export default function Signup() {
-    const router = useRouter();
-    const [rollNo, setRollNo] = useState('');
-    const [mobile, setMobile] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
+interface Student {
+  roll_no: string;
+  full_name?: string;
+  gender?: string;
+  mobile_no?: string;
+  email?: string;
+  hostel_no?: string | null;
+  room_no?: string | null;
+  email_verified?: boolean;
+  created_at?: string;
+}
 
-    const handleSignup = () => {
-        if (!rollNo || !mobile || !email || !password || !confirmPassword) {
-            Alert.alert('Error', 'Please fill in all fields.');
-            return;
+export default function Settings() {
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const studentData = await AsyncStorage.getItem('student');
+        if (studentData) {
+          const parsedData: Student = JSON.parse(studentData);
+          setStudent(parsedData);
+        } else {
+          Alert.alert('Error', 'Please log in again.');
+          router.replace('/login');
         }
-
-        if (password !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match.');
-            return;
-        }
-
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            router.replace('/(tabs)');
-        }, 1500);
+      } catch (error) {
+        console.error('Error:', error);
+        Alert.alert('Error', 'Failed to load user data.');
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchStudentData();
+  }, [router]);
 
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('student');
+      router.replace('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to log out.');
+    }
+  };
+
+  if (loading) {
     return (
-        <PaperProvider>
-            <KeyboardAvoidingView
-                style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.inner}>
-                        <Text style={styles.title}>Create Account</Text>
-                        <Text style={styles.subtitle}>Please fill in the details</Text>
-
-                        <View style={styles.inputContainer}>
-                            <MaterialCommunityIcons name="account-outline" size={22} color="#999" />
-                            <TextInput
-                                placeholder="Roll Number"
-                                placeholderTextColor="#999"
-                                value={rollNo}
-                                onChangeText={setRollNo}
-                                style={styles.input}
-                                selectionColor="#0B2447"
-                            />
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <MaterialCommunityIcons name="cellphone" size={22} color="#999" />
-                            <TextInput
-                                placeholder="Mobile Number"
-                                placeholderTextColor="#999"
-                                value={mobile}
-                                onChangeText={setMobile}
-                                keyboardType="numeric"
-                                style={styles.input}
-                                selectionColor="#0B2447"
-                            />
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <MaterialCommunityIcons name="email-outline" size={22} color="#999" />
-                            <TextInput
-                                placeholder="Email"
-                                placeholderTextColor="#999"
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                style={styles.input}
-                                selectionColor="#0B2447"
-                            />
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <MaterialCommunityIcons name="lock-outline" size={22} color="#999" />
-                            <TextInput
-                                placeholder="Password"
-                                placeholderTextColor="#999"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry={!showPassword}
-                                style={styles.input}
-                                selectionColor="#0B2447"
-                            />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                <MaterialCommunityIcons
-                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={22}
-                                    color="#999"
-                                />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <MaterialCommunityIcons name="lock-outline" size={22} color="#999" />
-                            <TextInput
-                                placeholder="Confirm Password"
-                                placeholderTextColor="#999"
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry={!showConfirmPassword}
-                                style={styles.input}
-                                selectionColor="#0B2447"
-                            />
-                            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                                <MaterialCommunityIcons
-                                    name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={22}
-                                    color="#999"
-                                />
-                            </TouchableOpacity>
-                        </View>
-
-                        <Button
-                            mode="contained"
-                            onPress={handleSignup}
-                            disabled={loading}
-                            style={styles.button}
-                            contentStyle={styles.buttonContent}
-                            labelStyle={styles.buttonLabel}
-                        >
-                            {loading ? <RNActivityIndicator color="#fff" /> : 'Create Account'}
-                        </Button>
-
-                        <View style={styles.footer}>
-                            <Text style={styles.footerText}>Already have an account? </Text>
-                            <TouchableOpacity onPress={() => router.replace('/login')}>
-                                <Text style={styles.footerLink}>Sign In</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-        </PaperProvider>
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#008122" />
+      </View>
     );
+  }
+
+  if (!student) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.error}>No user data found</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>User Profile</Text>
+      <Text style={styles.info}>Roll Number: {student.roll_no}</Text>
+      <Text style={styles.info}>Name: {student.full_name ?? 'N/A'}</Text>
+      <Text style={styles.info}>Gender: {student.gender ?? 'N/A'}</Text>
+      <Text style={styles.info}>Mobile: {student.mobile_no ?? 'N/A'}</Text>
+      <Text style={styles.info}>Email: {student.email ?? 'N/A'}</Text>
+      <Button
+        mode="contained"
+        onPress={handleLogout}
+        style={styles.button}
+        labelStyle={styles.buttonLabel}
+      >
+        Logout
+      </Button>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white' },
-    inner: { flex: 1, paddingHorizontal: 20, paddingTop: 60 },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#0B2447', marginBottom: 8 },
-    subtitle: { fontSize: 16, color: '#666', marginBottom: 32 },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f2f4f7',
-        borderRadius: 30,
-        paddingHorizontal: 16,
-        height: 50,
-        marginBottom: 16,
-    },
-    input: { flex: 1, marginLeft: 12, fontSize: 16, color: 'black' },
-    button: { height: 50, borderRadius: 30, justifyContent: 'center', backgroundColor: '#008122', marginBottom: 20 },
-    buttonContent: { height: 50, justifyContent: 'center' },
-    buttonLabel: { fontSize: 16, fontWeight: 'bold', color: 'white' },
-    footer: { flexDirection: 'row', justifyContent: 'center' },
-    footerText: { color: '#666' },
-    footerLink: { color: '#0B2447', fontWeight: 'bold' },
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 20,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0B2447',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  info: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
+  },
+  error: {
+    fontSize: 18,
+    color: 'red',
+    textAlign: 'center',
+  },
+  button: {
+    marginTop: 20,
+    height: 50,
+    borderRadius: 30,
+    backgroundColor: '#ff4444',
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
 });
