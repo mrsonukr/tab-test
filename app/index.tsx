@@ -42,7 +42,7 @@ export default function WelcomeScreen() {
                                 elevation: 0, // Remove shadow (optional)
                             }}
                             contentStyle={{
-                                height: 54, // Match original
+                                height: 50, // Match original
                                 justifyContent: 'center',
                             }}
                             labelStyle={{
@@ -66,7 +66,7 @@ export default function WelcomeScreen() {
                                 elevation: 0,
                             }}
                             contentStyle={{
-                                height: 54,
+                                height: 50,
                                 justifyContent: 'center',
                             }}
                             labelStyle={{

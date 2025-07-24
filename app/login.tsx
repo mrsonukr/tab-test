@@ -65,7 +65,7 @@ export default function LoginScreen() {
                                 backgroundColor: '#f2f4f7',
                                 borderRadius: 30,
                                 paddingHorizontal: 16,
-                                height: 54,
+                                height: 50,
                                 marginBottom: 16,
                             }}
                         >
@@ -93,7 +93,7 @@ export default function LoginScreen() {
                                 backgroundColor: '#f2f4f7',
                                 borderRadius: 30,
                                 paddingHorizontal: 16,
-                                height: 54,
+                                height: 50,
                                 marginBottom: 24,
                             }}
                         >
@@ -127,14 +127,14 @@ export default function LoginScreen() {
                             onPress={handleLogin}
                             disabled={loading}
                             style={{
-                                height: 54,
+                                height: 50,
                                 borderRadius: 30,
                                 justifyContent: 'center',
                                 backgroundColor: '#008122',
                                 marginBottom: 20,
                             }}
                             contentStyle={{
-                                height: 54,
+                                height: 50,
                             }}
                             labelStyle={{
                                 fontSize: 16,
