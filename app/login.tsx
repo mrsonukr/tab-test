@@ -31,7 +31,7 @@ export default function LoginScreen() {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 60 }}>
                     {/* Back Arrow */}
-                    <TouchableOpacity onPress={() => router.push('/')} style={{ marginBottom: 20 }}>
+                    <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 20 }}>
                         <Ionicons name="chevron-back" size={28} color="#0B2447" />
                     </TouchableOpacity>
 

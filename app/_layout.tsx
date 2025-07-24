@@ -2,7 +2,12 @@ import { Stack } from 'expo-router';
 
 export default function Layout() {
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        gestureEnabled: true,
+        gestureDirection: 'horizontal',
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
@@ -13,14 +18,18 @@ export default function Layout() {
         name="login"
         options={{
           headerShown: false,
-          animation: 'slide_from_right', // animate into login from right
+          presentation: 'card',
+          animationTypeForReplace: 'push',
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
         }}
       />
       <Stack.Screen
         name="(tabs)"
         options={{
           headerShown: false,
-          animation: 'fade', // or 'default' if you want bottom tab snap
+          presentation: 'card',
+          gestureEnabled: false,
         }}
       />
     </Stack>
