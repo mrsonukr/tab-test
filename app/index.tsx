@@ -29,11 +29,11 @@ export default function WelcomeScreen() {
                 </View>
 
                 {/* Bottom Buttons */}
-                <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+                <View style={{ flex: 1, justifyContent: 'flex-end', marginBottom: 20 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         <Button
                             mode="contained"
-                            onPress={() => router.replace('/login')}
+                            onPress={() => router.push('/login')}
                             style={{
                                 flex: 1,
                                 marginRight: 10,
