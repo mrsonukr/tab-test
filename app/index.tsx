@@ -1,6 +1,7 @@
 // app/index.tsx
 import { useRouter } from 'expo-router';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
+import { Button } from './expo/ui';
 
 export default function WelcomeScreen() {
     const router = useRouter();
@@ -8,7 +9,7 @@ export default function WelcomeScreen() {
     return (
         <View style={{ flex: 1, backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 40 }}>
 
-            {/* Image aligned toward center but bottom of its space */}
+            {/* Top Image */}
             <View style={{ flex: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
                 <Image
                     source={require('../assets/vectors/students.png')}
@@ -16,7 +17,7 @@ export default function WelcomeScreen() {
                 />
             </View>
 
-            {/* Center Text */}
+            {/* Welcome Text */}
             <View style={{ flex: 2, justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>
                     Welcome to HostelCare
@@ -26,19 +27,28 @@ export default function WelcomeScreen() {
                 </Text>
             </View>
 
-            {/* Bottom Button */}
+            {/* Bottom Buttons */}
             <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-                <TouchableOpacity
-                    onPress={() => router.replace('/(tabs)')}
-                    style={{
-                        backgroundColor: '#2563eb',
-                        paddingVertical: 16,
-                        borderRadius: 30,
-                        alignItems: 'center',
-                    }}
-                >
-                    <Text style={{ color: 'white', fontSize: 18, fontWeight: '600' }}>Get Started</Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Button
+                        onPress={() => router.replace('/(tabs)')}
+                        style={{ flex: 1, marginRight: 10 }}
+                        color="success"
+                        shape="pill"
+                    >
+                        Login
+                    </Button>
+
+                    <Button
+                        onPress={() => router.replace('/(tabs)')}
+                        style={{ flex: 1, marginLeft: 10 }}
+                        color="success"
+                        shape="pill"
+                        variant="solid"
+                    >
+                        Signup
+                    </Button>
+                </View>
             </View>
         </View>
     );
