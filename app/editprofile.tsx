@@ -1,0 +1,378 @@
+import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+interface Student {
+  roll_no: string;
+  full_name?: string;
+  gender?: string;
+  mobile_no?: string;
+  email?: string;
+  hostel_no?: string | null;
+  room_no?: string | null;
+  email_verified?: boolean;
+  created_at?: string;
+  profile_pic_url?: string | null;
+}
+
+const EditProfile: React.FC = () => {
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [formData, setFormData] = useState<{
+    mobile_no: string;
+    email: string;
+    profile_pic_url: string | null;
+    newImage: ImagePicker.ImagePickerAsset | null;
+  }>({
+    mobile_no: '',
+    email: '',
+    profile_pic_url: null,
+    newImage: null,
+  });
+  const [errors, setErrors] = useState<{ mobile_no?: string; email?: string; image?: string }>({});
+  const router = useRouter();
+
+  const fetchStudentData = useCallback(async () => {
+    try {
+      const studentData = await AsyncStorage.getItem('student');
+      if (studentData) {
+        const parsedData: Student = JSON.parse(studentData);
+        setStudent(parsedData);
+        setFormData({
+          mobile_no: parsedData.mobile_no || '',
+          email: parsedData.email || '',
+          profile_pic_url: parsedData.profile_pic_url || null,
+          newImage: null,
+        });
+      } else {
+        Alert.alert('Error', 'Please log in again.');
+        router.replace('/login');
+      }
+    } catch (error: unknown) {
+      console.error('Fetch error:', error);
+      Alert.alert('Error', 'Failed to load user data.');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    fetchStudentData();
+  }, [fetchStudentData]);
+
+  const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert('Permission Denied', 'Please allow access to your photo library.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      const selectedImage = result.assets[0];
+      if (!['image/jpeg', 'image/png'].includes(selectedImage.mimeType || '')) {
+        setErrors((prev) => ({ ...prev, image: 'Only JPEG or PNG images are allowed.' }));
+        return;
+      }
+      setFormData((prev) => ({ ...prev, newImage: selectedImage }));
+      setErrors((prev) => ({ ...prev, image: undefined }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: { mobile_no?: string; email?: string; image?: string } = {};
+    if (!formData.mobile_no || !/^\d{10}$/.test(formData.mobile_no)) {
+      newErrors.mobile_no = 'Mobile number must be 10 digits.';
+    }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert('Error', 'Please fix the errors in the form.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let profilePicUrl = formData.profile_pic_url;
+
+      // Upload image if a new one is selected
+      if (formData.newImage) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('image', {
+          uri: formData.newImage.uri,
+          type: formData.newImage.mimeType || 'image/jpeg',
+          name: `profile.${formData.newImage.mimeType?.split('/')[1] || 'jpg'}`,
+        } as any); // Note: 'as any' is used due to React Native FormData limitations; ideally, use a typed FormData library if available
+
+        const uploadResponse = await fetch('https://hostel.mssonukr.workers.dev/', {
+          method: 'POST',
+          body: formDataToSend,
+          headers: {
+            // Note: Content-Type is omitted as FormData sets it automatically
+          },
+        });
+
+        const uploadData = await uploadResponse.json();
+        if (uploadResponse.status === 200 && uploadData.urls && uploadData.urls.length > 0) {
+          profilePicUrl = uploadData.urls[0];
+        } else {
+          throw new Error(uploadData.error || 'Image upload failed.');
+        }
+      }
+
+      // Update profile
+      const updateResponse = await fetch(
+        `https://hostelapis.mssonutech.workers.dev/api/student/${student?.roll_no}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mobile_no: formData.mobile_no,
+            email: formData.email || null,
+            profile_pic_url: profilePicUrl,
+          }),
+        }
+      );
+
+      const updateData = await updateResponse.json();
+      if (updateResponse.status === 200 && updateData.success) {
+        // Update AsyncStorage
+        const updatedStudent: Student = {
+          ...student!,
+          mobile_no: formData.mobile_no,
+          email: formData.email,
+          profile_pic_url: profilePicUrl,
+        };
+        await AsyncStorage.setItem('student', JSON.stringify(updatedStudent));
+        setStudent(updatedStudent);
+        Alert.alert('Success', 'Profile updated successfully!');
+        router.back();
+      } else {
+        throw new Error(updateData.error || 'Failed to update profile.');
+      }
+    } catch (error: unknown) {
+      console.error('Submit error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile.';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007B5D" />
+      </View>
+    );
+  }
+
+  if (!student) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.error}>No user data found</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Edit Profile</Text>
+
+        {/* Profile Picture */}
+        <View style={styles.profileSection}>
+          <TouchableOpacity onPress={pickImage}>
+            <Image
+              source={{
+                uri:
+                  formData.newImage
+                    ? formData.newImage.uri
+                    : formData.profile_pic_url ||
+                      (student.gender?.toLowerCase() === 'female'
+                        ? 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
+                        : 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400'),
+              }}
+              style={styles.profileImage}
+            />
+            <View style={styles.editIcon}>
+              <Feather name="edit-3" size={18} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+          {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+        </View>
+
+        {/* Mobile Number */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputLabel}>
+            <Feather name="phone" size={20} color="#007B5D" />
+            <Text style={styles.label}>Mobile Number</Text>
+          </View>
+          <TextInput
+            style={[styles.input, errors.mobile_no ? styles.inputError : null]}
+            value={formData.mobile_no}
+            onChangeText={(text) => setFormData((prev) => ({ ...prev, mobile_no: text }))}
+            keyboardType="phone-pad"
+            placeholder="Enter 10-digit mobile number"
+            maxLength={10}
+          />
+          {errors.mobile_no && <Text style={styles.errorText}>{errors.mobile_no}</Text>}
+        </View>
+
+        {/* Email */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputLabel}>
+            <Feather name="mail" size={20} color="#007B5D" />
+            <Text style={styles.label}>Email</Text>
+          </View>
+          <TextInput
+            style={[styles.input, errors.email ? styles.inputError : null]}
+            value={formData.email}
+            onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
+            keyboardType="email-address"
+            placeholder="Enter email (optional)"
+            autoCapitalize="none"
+          />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={[styles.submitButton, submitting ? styles.submitButtonDisabled : null]}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.submitButtonText}>Save Changes</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F2F2F7',
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 20,
+  },
+  section: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 20,
+    paddingBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 12,
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: 12,
+    right: 0,
+    backgroundColor: '#007B5D',
+    borderRadius: 12,
+    padding: 4,
+  },
+  inputContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  inputLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  label: {
+    fontSize: 16,
+    color: '#000',
+    marginLeft: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#000',
+    backgroundColor: '#FAFAFA',
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#FF3B30',
+    marginTop: 4,
+  },
+  submitButton: {
+    backgroundColor: '#007B5D',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#A0A0A0',
+  },
+  submitButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  error: {
+    fontSize: 18,
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});
+
+export default EditProfile;

@@ -40,7 +40,6 @@ const Settings: React.FC = () => {
         const parsedData: Student = JSON.parse(studentData);
         setStudent(parsedData);
 
-        // Fetch latest data from API
         const response = await fetch(
           `https://hostelapis.mssonutech.workers.dev/api/student/${parsedData.roll_no}`,
           {
@@ -61,7 +60,7 @@ const Settings: React.FC = () => {
         Alert.alert('Error', 'Please log in again.');
         router.replace('/login');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error:', error);
       Alert.alert('Error', 'Failed to load user data.');
     } finally {
@@ -74,10 +73,10 @@ const Settings: React.FC = () => {
     fetchStudentData();
   }, [fetchStudentData]);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchStudentData();
-  };
+  }, [fetchStudentData]);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -89,7 +88,7 @@ const Settings: React.FC = () => {
           try {
             await AsyncStorage.removeItem('student');
             router.replace('/login');
-          } catch (error) {
+          } catch (error: unknown) {
             console.error('Logout error:', error);
             Alert.alert('Error', 'Failed to log out.');
           }
@@ -99,7 +98,7 @@ const Settings: React.FC = () => {
   };
 
   const handleEditProfile = () => {
-    Alert.alert('Feature', 'Edit Profile feature coming soon!');
+    router.push('/editprofile');
   };
 
   const handleChangePassword = () => {
@@ -167,7 +166,6 @@ const Settings: React.FC = () => {
       contentContainerStyle={styles.contentContainer}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007B5D" />}
     >
-      {/* Profile Section */}
       <View style={styles.profileSection}>
         <Image
           source={{ uri: student.profile_pic_url || getDefaultProfileImage(student.gender) }}
@@ -182,7 +180,6 @@ const Settings: React.FC = () => {
         <Text style={styles.profileRoll}>Roll No: {student.roll_no || 'N/A'}</Text>
       </View>
 
-      {/* Profile Information */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profile Information</Text>
         <View style={styles.infoItem}>
@@ -222,7 +219,6 @@ const Settings: React.FC = () => {
         </View>
       </View>
 
-      {/* Hostel Details */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Hostel Details</Text>
         <View style={styles.infoItem}>
@@ -260,7 +256,6 @@ const Settings: React.FC = () => {
         </View>
       </View>
 
-      {/* Account Settings */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account Settings</Text>
         <TouchableOpacity style={styles.settingItem} onPress={handleEditProfile}>
@@ -300,7 +295,6 @@ const Settings: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Logout */}
       <View style={styles.section}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Feather name="log-out" size={20} color="#FF3B30" />
@@ -310,8 +304,6 @@ const Settings: React.FC = () => {
     </ScrollView>
   );
 };
-
-export default Settings;
 
 const styles = StyleSheet.create({
   container: {
@@ -452,3 +444,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
+export default Settings;
