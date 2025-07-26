@@ -1,3 +1,4 @@
+import CustomHeader from '../../components/CustomHeader';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -5,16 +6,19 @@ export default function Tab() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Hello</Text>
+    <>
+      <CustomHeader title="Home" />
+      <View style={styles.container}>
+        <Text style={styles.heading}>Hello</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push('/')}
-      >
-        <Text style={styles.buttonText}>Go to Welcome</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push('/')}
+        >
+          <Text style={styles.buttonText}>Go to Welcome</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 }
 

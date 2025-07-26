@@ -1,10 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native';
+import CustomHeader from '../../components/CustomHeader';
 
 export default function Tab() {
   return (
-    <View style={styles.container}>
-      <Text>Tab [Home|Settings]</Text>
-    </View>
+    <>
+      <CustomHeader title="Notifications" />
+      <View style={styles.container}>
+        <Text>Tab [Home|Settings]</Text>
+      </View>
+    </>
   );
 }
 

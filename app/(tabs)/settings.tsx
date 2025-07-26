@@ -1,6 +1,7 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import CustomHeader from '../../components/CustomHeader';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -155,26 +156,34 @@ const Settings: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007B5D" />
-      </View>
+      <>
+        <CustomHeader title="Settings" />
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#007B5D" />
+        </View>
+      </>
     );
   }
 
   if (!student) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.error}>No user data found</Text>
-      </View>
+      <>
+        <CustomHeader title="Settings" />
+        <View style={styles.container}>
+          <Text style={styles.error}>No user data found</Text>
+        </View>
+      </>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007B5D" />}
-    >
+    <>
+      <CustomHeader title="Settings" />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007B5D" />}
+      >
       <View style={styles.profileSection}>
         <View style={styles.profileImageContainer}>
           {imageLoading && <SkeletonLoader />}
@@ -323,7 +332,8 @@ const Settings: React.FC = () => {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 };
 

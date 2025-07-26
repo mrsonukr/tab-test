@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import CustomHeader from '../components/CustomHeader';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -273,27 +274,35 @@ const EditProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <PaperProvider>
-        <View style={styles.container}>
-          <ActivityIndicator size="large" color="#007B5D" />
-        </View>
-      </PaperProvider>
+      <>
+        <CustomHeader title="Edit Profile" showBackButton onBackPress={() => router.back()} />
+        <PaperProvider>
+          <View style={styles.container}>
+            <ActivityIndicator size="large" color="#007B5D" />
+          </View>
+        </PaperProvider>
+      </>
     );
   }
 
   if (!student) {
     return (
-      <PaperProvider>
-        <View style={styles.container}>
-          <Text style={styles.error}>No user data found</Text>
-        </View>
-      </PaperProvider>
+      <>
+        <CustomHeader title="Edit Profile" showBackButton onBackPress={() => router.back()} />
+        <PaperProvider>
+          <View style={styles.container}>
+            <Text style={styles.error}>No user data found</Text>
+          </View>
+        </PaperProvider>
+      </>
     );
   }
 
   return (
-    <PaperProvider>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <>
+      <CustomHeader title="Edit Profile" showBackButton onBackPress={() => router.back()} />
+      <PaperProvider>
+        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Edit Profile</Text>
 
@@ -379,8 +388,9 @@ const EditProfile: React.FC = () => {
             {submitting ? <ActivityIndicator color="#fff" /> : 'Save Changes'}
           </Button>
         </View>
-      </ScrollView>
-    </PaperProvider>
+        </ScrollView>
+      </PaperProvider>
+    </>
   );
 };
 
