@@ -50,6 +50,7 @@ export default function LoginScreen() {
       if (response.status === 200 && data.success) {
         // Save student data to AsyncStorage
         await AsyncStorage.setItem('student', JSON.stringify(data.student));
+        // Use replace to prevent going back to login screen
         router.replace('/(tabs)');
       } else {
         Alert.alert('Error', data.error || 'Invalid username or password.');
