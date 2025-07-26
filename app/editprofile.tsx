@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import CustomHeader from '../components/CustomHeader';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +16,7 @@ import {
   View
 } from 'react-native';
 import { Button, Provider as PaperProvider } from 'react-native-paper';
+import CustomHeader from '../components/CustomHeader';
 
 
 interface Student {
@@ -304,8 +304,6 @@ const EditProfile: React.FC = () => {
       <PaperProvider>
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Edit Profile</Text>
-
           {/* Profile Picture */}
           <View style={styles.profileSection}>
             <TouchableOpacity onPress={pickImage}>
@@ -397,7 +395,7 @@ const EditProfile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: '#fff',
   },
   contentContainer: {
     padding: 20,
