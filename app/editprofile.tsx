@@ -13,8 +13,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { Button, Provider as PaperProvider } from 'react-native-paper';
+
 
 interface Student {
   roll_no: string;
@@ -44,6 +46,15 @@ const EditProfile: React.FC = () => {
     profile_pic_url: null,
     newImage: null,
   });
+  const [originalData, setOriginalData] = useState<{
+    mobile_no: string;
+    email: string;
+    profile_pic_url: string | null;
+  }>({
+    mobile_no: '',
+    email: '',
+    profile_pic_url: null,
+  });
   const [errors, setErrors] = useState<{ mobile_no?: string; email?: string; image?: string }>({});
   const router = useRouter();
 
@@ -53,12 +64,16 @@ const EditProfile: React.FC = () => {
       if (studentData) {
         const parsedData: Student = JSON.parse(studentData);
         setStudent(parsedData);
-        setFormData({
+        const initialFormData = {
           mobile_no: parsedData.mobile_no || '',
           email: parsedData.email || '',
           profile_pic_url: parsedData.profile_pic_url || null,
+        };
+        setFormData({
+          ...initialFormData,
           newImage: null,
         });
+        setOriginalData(initialFormData);
       } else {
         Alert.alert('Error', 'Please log in again.');
         router.replace('/login');
@@ -75,6 +90,14 @@ const EditProfile: React.FC = () => {
     fetchStudentData();
   }, [fetchStudentData]);
 
+  // Check if there are any changes
+  const hasChanges = () => {
+    return (
+      formData.mobile_no !== originalData.mobile_no ||
+      formData.email !== originalData.email ||
+      formData.newImage !== null
+    );
+  };
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -95,7 +118,7 @@ const EditProfile: React.FC = () => {
         setErrors((prev) => ({ ...prev, image: 'Only JPEG or PNG images are allowed.' }));
         return;
       }
-      
+
       try {
         // Compress and convert to WebP
         const compressedImage = await compressImageToWebP(selectedImage);
@@ -105,46 +128,46 @@ const EditProfile: React.FC = () => {
         setErrors((prev) => ({ ...prev, image: 'Failed to process image. Please try another image.' }));
         return;
       }
-      
+
       setErrors((prev) => ({ ...prev, image: undefined }));
     }
   };
 
   const compressImageToWebP = async (image: ImagePicker.ImagePickerAsset): Promise<ImagePicker.ImagePickerAsset> => {
-    let quality = 0.8;
+    let quality = 0.6;
     let compressedImage = image;
-    
-    // Keep compressing until under 200KB or quality gets too low
-    while (quality > 0.1) {
+
+    // Keep compressing until under 50KB or quality gets too low
+    while (quality > 0.05) {
       const result = await manipulateAsync(
         compressedImage.uri,
-        [{ resize: { width: 800 } }], // Resize to max 800px width
+        [{ resize: { width: 400 } }], // Resize to max 400px width for smaller file
         {
           compress: quality,
           format: SaveFormat.WEBP,
         }
       );
-      
+
       // Check file size (approximate)
       const response = await fetch(result.uri);
       const blob = await response.blob();
       const sizeInKB = blob.size / 1024;
-      
-      if (sizeInKB <= 200) {
+
+      if (sizeInKB <= 50) {
         return {
           ...compressedImage,
           uri: result.uri,
           mimeType: 'image/webp',
         };
       }
-      
-      quality -= 0.1;
+
+      quality -= 0.05;
       compressedImage = {
         ...compressedImage,
         uri: result.uri,
       };
     }
-    
+
     // If still too large, return the last compressed version
     return compressedImage;
   };
@@ -162,6 +185,11 @@ const EditProfile: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!hasChanges()) {
+      Alert.alert('No Changes', 'No changes detected to save.');
+      return;
+    }
+
     if (!validateForm()) {
       Alert.alert('Error', 'Please fix the errors in the form.');
       return;
@@ -222,6 +250,13 @@ const EditProfile: React.FC = () => {
         };
         await AsyncStorage.setItem('student', JSON.stringify(updatedStudent));
         setStudent(updatedStudent);
+        // Update original data to reflect saved changes
+        setOriginalData({
+          mobile_no: formData.mobile_no,
+          email: formData.email,
+          profile_pic_url: profilePicUrl,
+        });
+        setFormData(prev => ({ ...prev, newImage: null }));
         Alert.alert('Success', 'Profile updated successfully!');
         router.back();
       } else {
@@ -238,95 +273,114 @@ const EditProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#007B5D" />
-      </View>
+      <PaperProvider>
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#007B5D" />
+        </View>
+      </PaperProvider>
     );
   }
 
   if (!student) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.error}>No user data found</Text>
-      </View>
+      <PaperProvider>
+        <View style={styles.container}>
+          <Text style={styles.error}>No user data found</Text>
+        </View>
+      </PaperProvider>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Edit Profile</Text>
+    <PaperProvider>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Edit Profile</Text>
 
-        {/* Profile Picture */}
-        <View style={styles.profileSection}>
-          <TouchableOpacity onPress={pickImage}>
-            <Image
-              source={{
-                uri:
-                  formData.newImage
-                    ? formData.newImage.uri
-                    : formData.profile_pic_url ||
+          {/* Profile Picture */}
+          <View style={styles.profileSection}>
+            <TouchableOpacity onPress={pickImage}>
+              <Image
+                source={{
+                  uri:
+                    formData.newImage
+                      ? formData.newImage.uri
+                      : formData.profile_pic_url ||
                       (student.gender?.toLowerCase() === 'female'
                         ? 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
                         : 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400'),
-              }}
-              style={styles.profileImage}
-            />
-            <View style={styles.editIcon}>
-              <Feather name="edit-3" size={18} color="#FFFFFF" />
+                }}
+                style={styles.profileImage}
+              />
+              <View style={styles.editIcon}>
+                <Feather name="edit-3" size={18} color="#FFFFFF" />
+              </View>
+            </TouchableOpacity>
+            {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+          </View>
+
+          {/* Mobile Number */}
+          <View style={styles.inputContainer}>
+            <View style={styles.inputLabel}>
+              <Feather name="phone" size={20} color="#007B5D" />
+              <Text style={styles.label}>Mobile Number</Text>
             </View>
-          </TouchableOpacity>
-          {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
-        </View>
-
-        {/* Mobile Number */}
-        <View style={styles.inputContainer}>
-          <View style={styles.inputLabel}>
-            <Feather name="phone" size={20} color="#007B5D" />
-            <Text style={styles.label}>Mobile Number</Text>
+            <TextInput
+              style={[styles.input, errors.mobile_no ? styles.inputError : null]}
+              value={formData.mobile_no}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, mobile_no: text }))}
+              keyboardType="phone-pad"
+              placeholder="Enter 10-digit mobile number"
+              maxLength={10}
+            />
+            {errors.mobile_no && <Text style={styles.errorText}>{errors.mobile_no}</Text>}
           </View>
-          <TextInput
-            style={[styles.input, errors.mobile_no ? styles.inputError : null]}
-            value={formData.mobile_no}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, mobile_no: text }))}
-            keyboardType="phone-pad"
-            placeholder="Enter 10-digit mobile number"
-            maxLength={10}
-          />
-          {errors.mobile_no && <Text style={styles.errorText}>{errors.mobile_no}</Text>}
-        </View>
 
-        {/* Email */}
-        <View style={styles.inputContainer}>
-          <View style={styles.inputLabel}>
-            <Feather name="mail" size={20} color="#007B5D" />
-            <Text style={styles.label}>Email</Text>
+          {/* Email */}
+          <View style={styles.inputContainer}>
+            <View style={styles.inputLabel}>
+              <Feather name="mail" size={20} color="#007B5D" />
+              <Text style={styles.label}>Email</Text>
+            </View>
+            <TextInput
+              style={[styles.input, errors.email ? styles.inputError : null]}
+              value={formData.email}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
+              keyboardType="email-address"
+              placeholder="Enter email (optional)"
+              autoCapitalize="none"
+            />
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
           </View>
-          <TextInput
-            style={[styles.input, errors.email ? styles.inputError : null]}
-            value={formData.email}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
-            keyboardType="email-address"
-            placeholder="Enter email (optional)"
-            autoCapitalize="none"
-          />
-          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-        </View>
 
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={[styles.submitButton, submitting ? styles.submitButtonDisabled : null]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <Text style={styles.submitButtonText}>Save Changes</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {/* Submit Button */}
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            disabled={submitting || !hasChanges()}
+            style={{
+              height: 50,
+              borderRadius: 30,
+              justifyContent: 'center',
+              backgroundColor: (!hasChanges() || submitting) ? '#E5E5EA' : '#008122',
+              marginHorizontal: 20,
+              marginTop: 20,
+              elevation: 0,
+            }}
+            contentStyle={{
+              height: 50,
+            }}
+            labelStyle={{
+              fontSize: 16,
+              fontWeight: '600',
+              color: 'white',
+            }}
+          >
+            {submitting ? <ActivityIndicator color="#fff" /> : 'Save Changes'}
+          </Button>
+        </View>
+      </ScrollView>
+    </PaperProvider>
   );
 };
 
@@ -401,22 +455,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FF3B30',
     marginTop: 4,
-  },
-  submitButton: {
-    backgroundColor: '#007B5D',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginTop: 20,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#A0A0A0',
-  },
-  submitButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
   },
   error: {
     fontSize: 18,

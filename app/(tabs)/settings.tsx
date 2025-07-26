@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
   RefreshControl,
   ScrollView,
@@ -30,6 +31,7 @@ interface Student {
 const Settings: React.FC = () => {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [imageLoading, setImageLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const router = useRouter();
 
@@ -97,51 +99,58 @@ const Settings: React.FC = () => {
     ]);
   };
 
-  const handleEditProfile = () => {
-    router.push('/editprofile');
-  };
+  const getDefaultProfileImage = (gender?: string) =>
+    gender?.toLowerCase() === 'female'
+      ? require('../../assets/images/female.png')
+      : require('../../assets/images/male.png');
 
-  const handleChangePassword = () => {
-    Alert.alert('Feature', 'Change Password feature coming soon!');
-  };
-
-  const handleNotifications = () => {
-    Alert.alert('Feature', 'Notifications settings coming soon!');
-  };
-
-  const handlePrivacy = () => {
-    Alert.alert('Feature', 'Privacy & Security settings coming soon!');
-  };
-
-  const handleHelp = () => {
-    Alert.alert('Feature', 'Help & Support coming soon!');
-  };
-
-  const handleAddHostel = () => {
-    Alert.alert('Feature', 'Coming soon');
-  };
-
-  const handleAddRoom = () => {
-    Alert.alert('Feature', 'Coming soon');
-  };
-
-  const getDefaultProfileImage = (gender?: string) => {
-    return gender?.toLowerCase() === 'female'
-      ? 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
-      : 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400';
-  };
-
-  const capitalizeFirst = (str?: string) => {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
+  const capitalizeFirst = (str?: string) => (str ? str[0].toUpperCase() + str.slice(1) : '');
 
   const getFloor = (roomNo?: string | null) => {
     if (!roomNo) return 'N/A';
     const firstDigit = parseInt(roomNo.charAt(0), 10);
     if (isNaN(firstDigit)) return 'N/A';
-    if (firstDigit === 1) return 'Ground Floor';
-    return `${firstDigit - 1}th Floor`;
+    return firstDigit === 1 ? 'Ground Floor' : `${firstDigit - 1}th Floor`;
+  };
+
+  // Skeleton Loader
+  const SkeletonLoader = () => {
+    const animatedValue = new Animated.Value(0);
+    useEffect(() => {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(animatedValue, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animatedValue, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+      return () => animation.stop();
+    }, []);
+
+    const opacity = animatedValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.3, 0.7],
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.profileImage,
+          {
+            backgroundColor: '#E5E5EA',
+            opacity,
+          },
+        ]}
+      />
+    );
   };
 
   if (loading) {
@@ -167,19 +176,34 @@ const Settings: React.FC = () => {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007B5D" />}
     >
       <View style={styles.profileSection}>
-        <Image
-          source={{ uri: student.profile_pic_url || getDefaultProfileImage(student.gender) }}
-          style={styles.profileImage}
-        />
+        <View style={styles.profileImageContainer}>
+          {imageLoading && <SkeletonLoader />}
+          <Image
+            source={
+              student.profile_pic_url && student.profile_pic_url.startsWith('http')
+                ? { uri: student.profile_pic_url }
+                : getDefaultProfileImage(student.gender)
+            }
+            style={[
+              styles.profileImage,
+              { opacity: imageLoading ? 0 : 1, position: 'absolute' },
+            ]}
+            onLoadStart={() => setImageLoading(true)}
+            onLoad={() => setImageLoading(false)}
+            onError={() => setImageLoading(false)}
+          />
+        </View>
+
         <View style={styles.nameContainer}>
           <Text style={styles.profileName}>{student.full_name || 'Student Name'}</Text>
           <View style={styles.verifiedBadge}>
             <MaterialCommunityIcons name="check-decagram" size={18} color="green" />
           </View>
         </View>
-        <Text style={styles.profileRoll}>Roll No: {student.roll_no || 'N/A'}</Text>
+        <Text style={styles.profileRoll}>Roll No: {student.roll_no}</Text>
       </View>
 
+      {/* Profile Information */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profile Information</Text>
         <View style={styles.infoItem}>
@@ -219,6 +243,7 @@ const Settings: React.FC = () => {
         </View>
       </View>
 
+      {/* Hostel Details */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Hostel Details</Text>
         <View style={styles.infoItem}>
@@ -229,7 +254,7 @@ const Settings: React.FC = () => {
           {student.hostel_no ? (
             <Text style={styles.infoValue}>{student.hostel_no}</Text>
           ) : (
-            <TouchableOpacity onPress={handleAddHostel}>
+            <TouchableOpacity onPress={() => Alert.alert('Coming soon')}>
               <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
           )}
@@ -242,7 +267,7 @@ const Settings: React.FC = () => {
           {student.room_no ? (
             <Text style={styles.infoValue}>{student.room_no}</Text>
           ) : (
-            <TouchableOpacity onPress={handleAddRoom}>
+            <TouchableOpacity onPress={() => Alert.alert('Coming soon')}>
               <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
           )}
@@ -256,46 +281,43 @@ const Settings: React.FC = () => {
         </View>
       </View>
 
+      {/* Account Settings */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account Settings</Text>
-        <TouchableOpacity style={styles.settingItem} onPress={handleEditProfile}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/editprofile')}>
           <View style={styles.settingLeft}>
             <Feather name="edit-3" size={20} color="#007B5D" />
             <Text style={styles.settingLabel}>Edit Profile</Text>
           </View>
           <Feather name="chevron-right" size={18} color="#C7C7CC" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem} onPress={handleChangePassword}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
           <View style={styles.settingLeft}>
             <Feather name="lock" size={20} color="#007B5D" />
             <Text style={styles.settingLabel}>Change Password</Text>
           </View>
           <Feather name="chevron-right" size={18} color="#C7C7CC" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem} onPress={handleNotifications}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
           <View style={styles.settingLeft}>
             <Feather name="bell" size={20} color="#007B5D" />
             <Text style={styles.settingLabel}>Notifications</Text>
           </View>
           <Feather name="chevron-right" size={18} color="#C7C7CC" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem} onPress={handlePrivacy}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
           <View style={styles.settingLeft}>
             <Feather name="shield" size={20} color="#007B5D" />
             <Text style={styles.settingLabel}>Privacy & Security</Text>
           </View>
           <Feather name="chevron-right" size={18} color="#C7C7CC" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem} onPress={handleHelp}>
+        <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
           <View style={styles.settingLeft}>
             <Feather name="help-circle" size={20} color="#007B5D" />
             <Text style={styles.settingLabel}>Help & Support</Text>
           </View>
           <Feather name="chevron-right" size={18} color="#C7C7CC" />
         </TouchableOpacity>
-      </View>
-
-      <View style={styles.section}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Feather name="log-out" size={20} color="#FF3B30" />
           <Text style={styles.logoutText}>Logout</Text>
@@ -306,14 +328,9 @@ const Settings: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F7',
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 20,
-  },
+  container: { flex: 1, backgroundColor: '#F2F2F7' },
+  contentContainer: { padding: 20, paddingBottom: 20 },
+
   profileSection: {
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
@@ -321,39 +338,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 12,
   },
+  profileImageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 12,
+  },
   profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginBottom: 12,
   },
-  nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-    marginRight: 6,
-  },
-  verifiedBadge: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileRoll: {
-    fontSize: 14,
-    color: '#666',
-  },
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 20,
-  },
+  nameContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  profileName: { fontSize: 20, fontWeight: '600', color: '#000', marginRight: 6 },
+  verifiedBadge: { width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
+  profileRoll: { fontSize: 14, color: '#666' },
+
+  section: { backgroundColor: '#FFFFFF', borderRadius: 12, marginBottom: 20 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -362,6 +367,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 12,
   },
+
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -371,28 +377,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: '#E5E5EA',
   },
-  infoLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  infoLabel: {
-    fontSize: 16,
-    color: '#000',
-    marginLeft: 12,
-  },
-  infoValue: {
-    fontSize: 16,
-    color: '#666',
-  },
-  addButtonText: {
-    fontSize: 16,
-    color: '#007B5D',
-    fontWeight: '500',
-  },
-  emailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  infoLeft: { flexDirection: 'row', alignItems: 'center' },
+  infoLabel: { fontSize: 16, color: '#000', marginLeft: 12 },
+  infoValue: { fontSize: 16, color: '#666' },
+  addButtonText: { fontSize: 16, color: '#007B5D', fontWeight: '500' },
+
+  emailRow: { flexDirection: 'row', alignItems: 'center' },
   notVerifiedIcon: {
     width: 16,
     height: 16,
@@ -402,11 +392,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 6,
   },
-  exclamationText: {
-    fontSize: 10,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
+  exclamationText: { fontSize: 10, color: '#FFFFFF', fontWeight: 'bold' },
+
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -416,33 +403,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: '#E5E5EA',
   },
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: '#000',
-    marginLeft: 12,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  logoutText: {
-    fontSize: 16,
-    color: '#FF3B30',
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  error: {
-    fontSize: 18,
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
-  },
+  settingLeft: { flexDirection: 'row', alignItems: 'center' },
+  settingLabel: { fontSize: 16, color: '#000', marginLeft: 12 },
+
+  logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16 },
+  logoutText: { fontSize: 16, color: '#FF3B30', fontWeight: '500', marginLeft: 8 },
+
+  error: { fontSize: 18, color: 'red', textAlign: 'center', marginTop: 20 },
 });
 
 export default Settings;
