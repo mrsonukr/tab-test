@@ -84,7 +84,7 @@ const ProfileInfo: React.FC = () => {
             <>
                 <CustomHeader title="Profile Information" showBackButton onBackPress={() => router.back()} />
                 <View style={styles.container}>
-                    <ActivityIndicator size="large" color="#007B5D" />
+                    <ActivityIndicator size="large" color="#0D0D0D" />
                 </View>
             </>
         );
@@ -107,27 +107,27 @@ const ProfileInfo: React.FC = () => {
             <ScrollView
                 style={styles.container}
                 contentContainerStyle={styles.contentContainer}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007B5D" />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0D0D0D" />}
             >
                 {/* Profile Information */}
                 <View style={styles.section}>
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Feather name="user" size={20} color="#007B5D" />
+                            <Feather name="user" size={20} color="#0D0D0D" />
                             <Text style={styles.infoLabel}>Full Name</Text>
                         </View>
                         <Text style={styles.infoValue}>{student.full_name || 'N/A'}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Feather name="phone" size={20} color="#007B5D" />
+                            <Feather name="phone" size={20} color="#0D0D0D" />
                             <Text style={styles.infoLabel}>Mobile Number</Text>
                         </View>
                         <Text style={styles.infoValue}>{student.mobile_no ? `+91${student.mobile_no}` : 'N/A'}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Feather name="mail" size={20} color="#007B5D" />
+                            <Feather name="mail" size={20} color="#0D0D0D" />
                             <Text style={styles.infoLabel}>Email</Text>
                         </View>
                         <View style={styles.emailRow}>
@@ -141,14 +141,14 @@ const ProfileInfo: React.FC = () => {
                     </View>
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Feather name={student.gender === 'female' ? 'user-x' : 'user-check'} size={20} color="#007B5D" />
+                            <Feather name={student.gender === 'female' ? 'user-x' : 'user-check'} size={20} color="#0D0D0D" />
                             <Text style={styles.infoLabel}>Gender</Text>
                         </View>
                         <Text style={styles.infoValue}>{capitalizeFirst(student.gender) || 'N/A'}</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <View style={styles.infoLeft}>
-                            <Feather name="calendar" size={20} color="#007B5D" />
+                            <Feather name="calendar" size={20} color="#0D0D0D" />
                             <Text style={styles.infoLabel}>Account Created</Text>
                         </View>
                         <Text style={styles.infoValue}>
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#007B5D',
+        backgroundColor: '#0D0D0D',
         paddingVertical: 16,
         marginVertical: 20,
         borderRadius: 50,

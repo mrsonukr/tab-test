@@ -150,7 +150,7 @@ const Settings: React.FC = () => {
       <>
         <CustomHeader title="Settings" />
         <View style={styles.container}>
-          <ActivityIndicator size="large" color="#007B5D" />
+          <ActivityIndicator size="large" color="#0D0D0D" />
         </View>
       </>
     );
@@ -177,7 +177,7 @@ const Settings: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#007B5D"
+            tintColor="#0D0D0D"
           />
         }
       >
@@ -212,7 +212,7 @@ const Settings: React.FC = () => {
                     <MaterialCommunityIcons
                       name="check-decagram"
                       size={18}
-                      color="green"
+                      color="#0D0D0D"
                     />
                   </View>
                 </View>
@@ -228,9 +228,9 @@ const Settings: React.FC = () => {
 
         {/* Settings Menu */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/profile-info')}>
+          <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/editprofile')}>
             <View style={styles.settingLeft}>
-              <Feather name="user" size={20} color="#007B5D" />
+              <Feather name="user" size={20} color="#0D0D0D" />
               <Text style={styles.settingLabel}>Profile Information</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#000" />
@@ -238,7 +238,7 @@ const Settings: React.FC = () => {
 
           <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/hostel-details')}>
             <View style={styles.settingLeft}>
-              <Feather name="home" size={20} color="#007B5D" />
+              <Feather name="home" size={20} color="#0D0D0D" />
               <Text style={styles.settingLabel}>Hostel Details</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#000" />
@@ -246,7 +246,7 @@ const Settings: React.FC = () => {
 
           <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
             <View style={styles.settingLeft}>
-              <Feather name="lock" size={20} color="#007B5D" />
+              <Feather name="lock" size={20} color="#0D0D0D" />
               <Text style={styles.settingLabel}>Change Password</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#000" />
@@ -254,7 +254,7 @@ const Settings: React.FC = () => {
 
           <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
             <View style={styles.settingLeft}>
-              <Feather name="bell" size={20} color="#007B5D" />
+              <Feather name="bell" size={20} color="#0D0D0D" />
               <Text style={styles.settingLabel}>Notifications</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#000" />
@@ -262,7 +262,7 @@ const Settings: React.FC = () => {
 
           <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
             <View style={styles.settingLeft}>
-              <Feather name="file-text" size={20} color="#007B5D" />
+              <Feather name="file-text" size={20} color="#0D0D0D" />
               <Text style={styles.settingLabel}>Privacy Policy</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#000" />
@@ -270,7 +270,7 @@ const Settings: React.FC = () => {
 
           <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('Feature coming soon')}>
             <View style={styles.settingLeft}>
-              <Feather name="help-circle" size={20} color="#007B5D" />
+              <Feather name="help-circle" size={20} color="#0D0D0D" />
               <Text style={styles.settingLabel}>Help & Support</Text>
             </View>
             <Feather name="chevron-right" size={20} color="#000" />

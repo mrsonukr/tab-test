@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -14,7 +15,6 @@ import {
   View,
 } from 'react-native';
 import { Button, Provider as PaperProvider } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -50,7 +50,6 @@ export default function LoginScreen() {
       if (response.status === 200 && data.success) {
         // Save student data to AsyncStorage
         await AsyncStorage.setItem('student', JSON.stringify(data.student));
-        Alert.alert('Success', 'Login successful!');
         router.replace('/(tabs)');
       } else {
         Alert.alert('Error', data.error || 'Invalid username or password.');
@@ -152,7 +151,7 @@ export default function LoginScreen() {
                 height: 50,
                 borderRadius: 30,
                 justifyContent: 'center',
-                backgroundColor: '#008122',
+                backgroundColor: '#0D0D0D',
                 marginBottom: 20,
               }}
               contentStyle={{

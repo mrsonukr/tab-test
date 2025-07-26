@@ -19,7 +19,7 @@ export default function WelcomeScreen() {
 
                 {/* Welcome Text */}
                 <View style={{ flex: 2, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#008122' }}>
+                    <Text style={{ fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#0D0D0D' }}>
                         Welcome to HostelCare
                     </Text>
                     <Text style={{ fontSize: 16, textAlign: 'center', marginTop: 10, color: '#555' }}>
@@ -37,7 +37,7 @@ export default function WelcomeScreen() {
                                 flex: 1,
                                 marginRight: 10,
                                 borderRadius: 30,
-                                backgroundColor: '#008122',
+                                backgroundColor: '#0D0D0D',
                                 elevation: 0,
                             }}
                             contentStyle={{
@@ -60,7 +60,7 @@ export default function WelcomeScreen() {
                                 flex: 1,
                                 marginLeft: 10,
                                 borderRadius: 30,
-                                backgroundColor: '#008122',
+                                backgroundColor: '#0D0D0D',
                                 elevation: 0,
                             }}
                             contentStyle={{

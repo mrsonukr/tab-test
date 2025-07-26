@@ -42,10 +42,11 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 44 : StatusBar.currentHeight || 0,
-  },
+ container: {
+  backgroundColor: '#FFFFFF',
+  paddingTop: Platform.OS === 'ios' ? 44 : 0, // Don't use StatusBar.currentHeight
+},
+
   content: {
     flexDirection: 'row',
     alignItems: 'center',

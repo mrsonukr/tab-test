@@ -96,7 +96,7 @@ const HostelDetails: React.FC = () => {
       <>
         <CustomHeader title="Hostel Details" showBackButton onBackPress={() => router.back()} />
         <View style={styles.container}>
-          <ActivityIndicator size="large" color="#007B5D" />
+          <ActivityIndicator size="large" color="#0D0D0D" />
         </View>
       </>
     );
@@ -119,14 +119,14 @@ const HostelDetails: React.FC = () => {
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007B5D" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0D0D0D" />}
       >
         {/* Hostel Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Accommodation Details</Text>
           <View style={styles.infoItem}>
             <View style={styles.infoLeft}>
-              <Feather name="home" size={20} color="#007B5D" />
+              <Feather name="home" size={20} color="#0D0D0D" />
               <Text style={styles.infoLabel}>Hostel Number</Text>
             </View>
             {student.hostel_no ? (
@@ -139,7 +139,7 @@ const HostelDetails: React.FC = () => {
           </View>
           <View style={styles.infoItem}>
             <View style={styles.infoLeft}>
-              <Feather name="home" size={20} color="#007B5D" />
+              <Feather name="home" size={20} color="#0D0D0D" />
               <Text style={styles.infoLabel}>Room Number</Text>
             </View>
             {student.room_no ? (
@@ -152,14 +152,14 @@ const HostelDetails: React.FC = () => {
           </View>
           <View style={styles.infoItem}>
             <View style={styles.infoLeft}>
-              <MaterialCommunityIcons name="stairs" size={20} color="#007B5D" />
+              <MaterialCommunityIcons name="stairs" size={20} color="#0D0D0D" />
               <Text style={styles.infoLabel}>Floor</Text>
             </View>
             <Text style={styles.infoValue}>{getFloor(student.room_no)}</Text>
           </View>
           <View style={styles.infoItem}>
             <View style={styles.infoLeft}>
-              <MaterialCommunityIcons name="office-building" size={20} color="#007B5D" />
+              <MaterialCommunityIcons name="office-building" size={20} color="#0D0D0D" />
               <Text style={styles.infoLabel}>Hostel Type</Text>
             </View>
             <Text style={styles.infoValue}>{getHostelType(student.hostel_no)}</Text>
@@ -197,17 +197,17 @@ const HostelDetails: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <TouchableOpacity style={styles.actionButton} onPress={() => Alert.alert('Coming soon', 'Room change request feature will be available soon.')}>
-            <MaterialCommunityIcons name="swap-horizontal" size={20} color="#007B5D" />
+            <MaterialCommunityIcons name="swap-horizontal" size={20} color="#0D0D0D" />
             <Text style={styles.actionButtonText}>Request Room Change</Text>
             <Feather name="chevron-right" size={18} color="#C7C7CC" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => Alert.alert('Coming soon', 'Maintenance request feature will be available soon.')}>
-            <MaterialCommunityIcons name="tools" size={20} color="#007B5D" />
+            <MaterialCommunityIcons name="tools" size={20} color="#0D0D0D" />
             <Text style={styles.actionButtonText}>Report Maintenance Issue</Text>
             <Feather name="chevron-right" size={18} color="#C7C7CC" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => Alert.alert('Coming soon', 'Roommate information feature will be available soon.')}>
-            <MaterialCommunityIcons name="account-group" size={20} color="#007B5D" />
+            <MaterialCommunityIcons name="account-group" size={20} color="#0D0D0D" />
             <Text style={styles.actionButtonText}>View Roommates</Text>
             <Feather name="chevron-right" size={18} color="#C7C7CC" />
           </TouchableOpacity>
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   infoLeft: { flexDirection: 'row', alignItems: 'center' },
   infoLabel: { fontSize: 16, color: '#000', marginLeft: 12 },
   infoValue: { fontSize: 16, color: '#666' },
-  addButtonText: { fontSize: 16, color: '#007B5D', fontWeight: '500' },
+  addButtonText: { fontSize: 16, color: '#0D0D0D', fontWeight: '500' },
 
   statusCard: {
     paddingHorizontal: 20,

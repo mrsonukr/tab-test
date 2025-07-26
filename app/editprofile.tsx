@@ -1,23 +1,21 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { Button, Provider as PaperProvider } from 'react-native-paper';
 import CustomHeader from '../components/CustomHeader';
-
+import InputField from '../components/InputField';
+import SubmitButton from '../components/ui/SubmitButton';
 
 interface Student {
   roll_no: string;
@@ -27,7 +25,7 @@ interface Student {
   email?: string;
   hostel_no?: string | null;
   room_no?: string | null;
-  email_verified?: boolean;
+  email_verified: boolean;
   created_at?: string;
   profile_pic_url?: string | null;
 }
@@ -39,24 +37,28 @@ const EditProfile: React.FC = () => {
   const [formData, setFormData] = useState<{
     mobile_no: string;
     email: string;
+    gender: string;
     profile_pic_url: string | null;
     newImage: ImagePicker.ImagePickerAsset | null;
   }>({
     mobile_no: '',
     email: '',
+    gender: '',
     profile_pic_url: null,
     newImage: null,
   });
   const [originalData, setOriginalData] = useState<{
     mobile_no: string;
     email: string;
+    gender: string;
     profile_pic_url: string | null;
   }>({
     mobile_no: '',
     email: '',
+    gender: '',
     profile_pic_url: null,
   });
-  const [errors, setErrors] = useState<{ mobile_no?: string; email?: string; image?: string }>({});
+  const [errors, setErrors] = useState<{ mobile_no?: string; email?: string; gender?: string; image?: string }>({});
   const router = useRouter();
 
   const fetchStudentData = useCallback(async () => {
@@ -64,17 +66,22 @@ const EditProfile: React.FC = () => {
       const studentData = await AsyncStorage.getItem('student');
       if (studentData) {
         const parsedData: Student = JSON.parse(studentData);
+        parsedData.email_verified = !!parsedData.email_verified;
         setStudent(parsedData);
         const initialFormData = {
           mobile_no: parsedData.mobile_no || '',
           email: parsedData.email || '',
+          gender: parsedData.gender || '',
           profile_pic_url: parsedData.profile_pic_url || null,
-        };
-        setFormData({
-          ...initialFormData,
           newImage: null,
+        };
+        setFormData(initialFormData);
+        setOriginalData({
+          mobile_no: parsedData.mobile_no || '',
+          email: parsedData.email || '',
+          gender: parsedData.gender || '',
+          profile_pic_url: parsedData.profile_pic_url || null,
         });
-        setOriginalData(initialFormData);
       } else {
         Alert.alert('Error', 'Please log in again.');
         router.replace('/login');
@@ -91,46 +98,49 @@ const EditProfile: React.FC = () => {
     fetchStudentData();
   }, [fetchStudentData]);
 
-  // Check if there are any changes
   const hasChanges = () => {
     return (
       formData.mobile_no !== originalData.mobile_no ||
       formData.email !== originalData.email ||
+      formData.gender !== originalData.gender ||
       formData.newImage !== null
     );
   };
+
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission Denied', 'Please allow access to your photo library.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets?.length > 0) {
-      const selectedImage = result.assets[0];
-      if (!['image/jpeg', 'image/png'].includes(selectedImage.mimeType || '')) {
-        setErrors((prev) => ({ ...prev, image: 'Only JPEG or PNG images are allowed.' }));
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Denied', 'Please allow access to your photo library in device settings.');
         return;
       }
 
-      try {
-        // Compress and convert to WebP
-        const compressedImage = await compressImageToWebP(selectedImage);
-        setFormData((prev) => ({ ...prev, newImage: compressedImage }));
-      } catch (error) {
-        console.error('Image compression error:', error);
-        setErrors((prev) => ({ ...prev, image: 'Failed to process image. Please try another image.' }));
-        return;
-      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-      setErrors((prev) => ({ ...prev, image: undefined }));
+      if (!result.canceled && result.assets?.length > 0) {
+        const selectedImage = result.assets[0];
+        if (!['image/jpeg', 'image/png'].includes(selectedImage.mimeType || '')) {
+          setErrors((prev) => ({ ...prev, image: 'Only JPEG or PNG images are allowed.' }));
+          return;
+        }
+
+        try {
+          const compressedImage = await compressImageToWebP(selectedImage);
+          setFormData((prev) => ({ ...prev, newImage: compressedImage }));
+          setErrors((prev) => ({ ...prev, image: undefined }));
+        } catch (error) {
+          console.error('Image compression error:', error);
+          setErrors((prev) => ({ ...prev, image: 'Failed to process image. Please try another image.' }));
+        }
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to open gallery. Please check permissions or try again.');
     }
   };
 
@@ -138,18 +148,16 @@ const EditProfile: React.FC = () => {
     let quality = 0.6;
     let compressedImage = image;
 
-    // Keep compressing until under 50KB or quality gets too low
     while (quality > 0.05) {
       const result = await manipulateAsync(
         compressedImage.uri,
-        [{ resize: { width: 400 } }], // Resize to max 400px width for smaller file
+        [{ resize: { width: 400 } }],
         {
           compress: quality,
           format: SaveFormat.WEBP,
         }
       );
 
-      // Check file size (approximate)
       const response = await fetch(result.uri);
       const blob = await response.blob();
       const sizeInKB = blob.size / 1024;
@@ -169,23 +177,34 @@ const EditProfile: React.FC = () => {
       };
     }
 
-    // If still too large, return the last compressed version
     return compressedImage;
   };
 
   const validateForm = () => {
-    const newErrors: { mobile_no?: string; email?: string; image?: string } = {};
+    const newErrors: { mobile_no?: string; email?: string; gender?: string; image?: string } = {};
+
     if (!formData.mobile_no || !/^\d{10}$/.test(formData.mobile_no)) {
       newErrors.mobile_no = 'Mobile number must be 10 digits.';
     }
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format.';
+
+    if (formData.email) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address (e.g., user@example.com).';
+      }
+    } else {
+      newErrors.email = 'Email address is required.';
     }
+
+    if (!formData.gender || !['Male', 'Female', 'Others'].includes(formData.gender)) {
+      newErrors.gender = 'Please select a valid gender.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleUpdate = async () => {
     if (!hasChanges()) {
       Alert.alert('No Changes', 'No changes detected to save.');
       return;
@@ -200,21 +219,17 @@ const EditProfile: React.FC = () => {
     try {
       let profilePicUrl = formData.profile_pic_url;
 
-      // Upload image if a new one is selected
       if (formData.newImage) {
         const formDataToSend = new FormData();
         formDataToSend.append('image', {
           uri: formData.newImage.uri,
           type: 'image/webp',
           name: 'profile.webp',
-        } as any); // Note: 'as any' is used due to React Native FormData limitations; ideally, use a typed FormData library if available
+        } as any);
 
         const uploadResponse = await fetch('https://hostel.mssonukr.workers.dev/', {
           method: 'POST',
           body: formDataToSend,
-          headers: {
-            // Note: Content-Type is omitted as FormData sets it automatically
-          },
         });
 
         const uploadData = await uploadResponse.json();
@@ -225,11 +240,11 @@ const EditProfile: React.FC = () => {
         }
       }
 
-      // Prepare update payload with all student data to avoid NOT NULL constraint errors
       const updatePayload: Student = {
         ...student!,
         mobile_no: formData.mobile_no,
         email: formData.email || student!.email,
+        gender: formData.gender,
         profile_pic_url: profilePicUrl,
       };
 
@@ -244,20 +259,19 @@ const EditProfile: React.FC = () => {
 
       const updateData = await updateResponse.json();
       if (updateResponse.status === 200 && updateData.success) {
-        // Update AsyncStorage
         const updatedStudent: Student = {
           ...student!,
           ...updatePayload,
         };
         await AsyncStorage.setItem('student', JSON.stringify(updatedStudent));
         setStudent(updatedStudent);
-        // Update original data to reflect saved changes
         setOriginalData({
           mobile_no: formData.mobile_no,
           email: formData.email,
+          gender: formData.gender,
           profile_pic_url: profilePicUrl,
         });
-        setFormData(prev => ({ ...prev, newImage: null }));
+        setFormData((prev) => ({ ...prev, newImage: null }));
         Alert.alert('Success', 'Profile updated successfully!');
         router.back();
       } else {
@@ -274,199 +288,163 @@ const EditProfile: React.FC = () => {
 
   if (loading) {
     return (
-      <>
+      <View style={styles.mainContainer}>
         <CustomHeader title="Edit Profile" showBackButton onBackPress={() => router.back()} />
-        <PaperProvider>
-          <View style={styles.container}>
-            <ActivityIndicator size="large" color="#007B5D" />
-          </View>
-        </PaperProvider>
-      </>
+        <View style={styles.container}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
     );
   }
 
   if (!student) {
     return (
-      <>
+      <View style={styles.mainContainer}>
         <CustomHeader title="Edit Profile" showBackButton onBackPress={() => router.back()} />
-        <PaperProvider>
-          <View style={styles.container}>
-            <Text style={styles.error}>No user data found</Text>
-          </View>
-        </PaperProvider>
-      </>
+        <View style={styles.container}>
+          <Text style={styles.errorText}>No user data found</Text>
+        </View>
+      </View>
     );
   }
 
   return (
-    <>
+    <View style={styles.mainContainer}>
       <CustomHeader title="Edit Profile" showBackButton onBackPress={() => router.back()} />
-      <PaperProvider>
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.section}>
-          {/* Profile Picture */}
-          <View style={styles.profileSection}>
-            <TouchableOpacity onPress={pickImage}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.profileContainer}>
+          <TouchableOpacity onPress={pickImage} activeOpacity={0.8} style={styles.imageWrapper}>
+            <View style={styles.imageBorder}>
               <Image
-                source={{
-                  uri:
-                    formData.newImage
-                      ? formData.newImage.uri
-                      : formData.profile_pic_url ||
-                      (student.gender?.toLowerCase() === 'female'
-                        ? 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400'
-                        : 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400'),
-                }}
+                source={
+                  formData.newImage
+                    ? { uri: formData.newImage.uri }
+                    : formData.profile_pic_url
+                      ? { uri: formData.profile_pic_url }
+                      : require('../assets/images/male.png')
+                }
                 style={styles.profileImage}
               />
-              <View style={styles.editIcon}>
-                <Feather name="edit-3" size={18} color="#FFFFFF" />
-              </View>
-            </TouchableOpacity>
-            {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
-          </View>
-
-          {/* Mobile Number */}
-          <View style={styles.inputContainer}>
-            <View style={styles.inputLabel}>
-              <Feather name="phone" size={20} color="#007B5D" />
-              <Text style={styles.label}>Mobile Number</Text>
             </View>
-            <TextInput
-              style={[styles.input, errors.mobile_no ? styles.inputError : null]}
-              value={formData.mobile_no}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, mobile_no: text }))}
-              keyboardType="phone-pad"
-              placeholder="Enter 10-digit mobile number"
-              maxLength={10}
-            />
-            {errors.mobile_no && <Text style={styles.errorText}>{errors.mobile_no}</Text>}
-          </View>
-
-          {/* Email */}
-          <View style={styles.inputContainer}>
-            <View style={styles.inputLabel}>
-              <Feather name="mail" size={20} color="#007B5D" />
-              <Text style={styles.label}>Email</Text>
+            <View style={styles.cameraButton}>
+              <Feather name="camera" size={18} color="#fff" />
             </View>
-            <TextInput
-              style={[styles.input, errors.email ? styles.inputError : null]}
-              value={formData.email}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
-              keyboardType="email-address"
-              placeholder="Enter email (optional)"
-              autoCapitalize="none"
+          </TouchableOpacity>
+          {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
+
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>
+              {student.full_name || 'John Doe'}
+            </Text>
+            <MaterialCommunityIcons
+              name="check-decagram"
+              size={18}
+              color="#0D0D0D"
+              style={{ marginLeft: 6 }}
             />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
           </View>
 
-          {/* Submit Button */}
-          <Button
-            mode="contained"
-            onPress={handleSubmit}
-            disabled={submitting || !hasChanges()}
-            style={{
-              height: 50,
-              borderRadius: 30,
-              justifyContent: 'center',
-              backgroundColor: (!hasChanges() || submitting) ? '#E5E5EA' : '#008122',
-              marginHorizontal: 20,
-              marginTop: 20,
-              elevation: 0,
-            }}
-            contentStyle={{
-              height: 50,
-            }}
-            labelStyle={{
-              fontSize: 16,
-              fontWeight: '600',
-              color: 'white',
-            }}
-          >
-            {submitting ? <ActivityIndicator color="#fff" /> : 'Save Changes'}
-          </Button>
+          <Text style={styles.roll}>Roll No: {student.roll_no}</Text>
         </View>
-        </ScrollView>
-      </PaperProvider>
-    </>
+
+        <InputField
+          label="Mobile Number"
+          value={formData.mobile_no}
+          onChangeText={(text) => setFormData((prev) => ({ ...prev, mobile_no: text }))}
+          placeholder="Enter your phone"
+          keyboardType="phone-pad"
+          error={errors.mobile_no}
+        />
+        <InputField
+          label="Email Address"
+          value={formData.email}
+          onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
+          placeholder="yourmail@example.com"
+          keyboardType="email-address"
+          error={errors.email}
+        />
+        <InputField
+          label="Gender"
+          value={formData.gender}
+          onChangeText={(text) => setFormData((prev) => ({ ...prev, gender: text }))}
+          options={['Male', 'Female', 'Others']}
+          error={errors.gender}
+        />
+
+        <SubmitButton
+          title="Update"
+          onPress={handleUpdate}
+          loading={submitting}
+          disabled={submitting || !hasChanges()}
+        />
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', // Set the entire page background to white
   },
-  contentContainer: {
+  container: {
     padding: 20,
-    paddingBottom: 20,
+    backgroundColor: '#fff',
+    paddingBottom: 40,
   },
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 20,
-    paddingBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
-  },
-  profileSection: {
+  profileContainer: {
     alignItems: 'center',
-    paddingVertical: 20,
+    marginBottom: 32,
+  },
+  imageWrapper: {
+    position: 'relative',
+  },
+  imageBorder: {
+    borderWidth: 2,
+    borderColor: '#0D0D0D',
+    borderRadius: 999,
+    padding: 3,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 12,
+    width: 100,
+    height: 100,
+    borderRadius: 999,
+    backgroundColor: '#e5e5e5',
   },
-  editIcon: {
+  cameraButton: {
     position: 'absolute',
-    bottom: 12,
     right: 0,
-    backgroundColor: '#007B5D',
-    borderRadius: 12,
-    padding: 4,
+    bottom: 0,
+    backgroundColor: '#0D0D0D',
+    padding: 6,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
-  inputContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  inputLabel: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginTop: 12,
   },
-  label: {
-    fontSize: 16,
-    color: '#000',
-    marginLeft: 12,
+  name: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#000',
-    backgroundColor: '#FAFAFA',
-  },
-  inputError: {
-    borderColor: '#FF3B30',
+  roll: {
+    marginTop: 4,
+    fontSize: 14,
+    color: '#555',
   },
   errorText: {
     fontSize: 14,
     color: '#FF3B30',
-    marginTop: 4,
+    marginTop: 8,
+    textAlign: 'center',
   },
-  error: {
+  loadingText: {
     fontSize: 18,
-    color: 'red',
+    color: '#555',
     textAlign: 'center',
     marginTop: 20,
   },

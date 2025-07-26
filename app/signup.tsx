@@ -129,32 +129,6 @@ export default function SignupScreen() {
             </View>
 
             {/* Full Name */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: '#f2f4f7',
-                borderRadius: 30,
-                paddingHorizontal: 16,
-                height: 50,
-                marginBottom: 16,
-              }}
-            >
-              <MaterialCommunityIcons name="account-outline" size={22} color="#999" />
-              <TextInput
-                placeholder="Full Name *"
-                placeholderTextColor="#999"
-                value={formData.fullName}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, fullName: text }))}
-                style={{
-                  flex: 1,
-                  marginLeft: 12,
-                  fontSize: 16,
-                  color: 'black',
-                }}
-                selectionColor="#0B2447"
-              />
-            </View>
 
             {/* Mobile Number */}
             <View
@@ -170,7 +144,7 @@ export default function SignupScreen() {
             >
               <MaterialCommunityIcons name="phone-outline" size={22} color="#999" />
               <TextInput
-                placeholder="Mobile Number"
+                placeholder="Mobile Number *"
                 placeholderTextColor="#999"
                 value={formData.mobileNo}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, mobileNo: text }))}
@@ -200,7 +174,7 @@ export default function SignupScreen() {
             >
               <MaterialCommunityIcons name="email-outline" size={22} color="#999" />
               <TextInput
-                placeholder="Email"
+                placeholder="Email *"
                 placeholderTextColor="#999"
                 value={formData.email}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
@@ -297,7 +271,7 @@ export default function SignupScreen() {
                 height: 50,
                 borderRadius: 30,
                 justifyContent: 'center',
-                backgroundColor: '#008122',
+                backgroundColor: '#0D0D0D',
                 marginBottom: 20,
               }}
               contentStyle={{
