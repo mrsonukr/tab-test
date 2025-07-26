@@ -6,9 +6,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import CustomHeader from '../../components/CustomHeader';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const SLIDER_HEIGHT = 200;
@@ -35,9 +37,20 @@ export default function Tab() {
   }, []);
 
   return (
-    <>
-      <CustomHeader title="Home" />
-      <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+        {/* Welcome Section */}
+        <View style={styles.welcomeSection}>
+          <View>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.userName}>Sonu Kumar 👋</Text>
+          </View>
+          <Image
+            source={require('../../assets/images/male.png')}
+            style={styles.avatar}
+          />
+        </View>
+
         {/* Slider */}
         <View style={styles.sliderWrapper}>
           <Animated.ScrollView
@@ -63,26 +76,107 @@ export default function Tab() {
           </Animated.ScrollView>
         </View>
 
-        {/* Two Boxes Below Slider */}
-        <View style={styles.row}>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Hostel Mess</Text>
-            <Text style={styles.cardDesc}>Check todays menu and timings</Text>
+        {/* Recent Complaints Header + Cards */}
+        <View style={styles.recentComplaintsContainer}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>My Recent Complaints</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Room Maintenance</Text>
-            <Text style={styles.cardDesc}>Report issues or track status</Text>
+
+          <View style={styles.complaintCard}>
+            <View style={styles.cardTopRow}>
+              <View style={styles.iconWrapper}>
+                <MaterialIcons name="lightbulb-outline" size={20} color="#3b82f6" />
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.complaintCategory}>Electricity</Text>
+                <Text style={styles.complaintIssue}>Power fluctuation in room 304</Text>
+                <Text style={styles.submittedText}>Submitted on 2024-02-15</Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: '#fde68a' }]}>
+                <Text style={[styles.statusText, { color: '#92400e' }]}>Pending</Text>
+              </View>
+            </View>
           </View>
+
+          <View style={styles.complaintCard}>
+            <View style={styles.cardTopRow}>
+              <View style={styles.iconWrapper}>
+                <FontAwesome5 name="water" size={20} color="#3b82f6" />
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.complaintCategory}>Plumbing</Text>
+                <Text style={styles.complaintIssue}>Water leakage in bathroom</Text>
+                <Text style={styles.submittedText}>Submitted on 2024-02-14</Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: '#bfdbfe' }]}>
+                <Text style={[styles.statusText, { color: '#1e40af' }]}>In Progress</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.complaintCard}>
+            <View style={styles.cardTopRow}>
+              <View style={styles.iconWrapper}>
+                <FontAwesome name="wrench" size={20} color="#3b82f6" />
+              </View>
+              <View style={styles.cardInfo}>
+                <Text style={styles.complaintCategory}>Maintenance</Text>
+                <Text style={styles.complaintIssue}>AC not working properly</Text>
+                <Text style={styles.submittedText}>Submitted on 2024-02-13</Text>
+              </View>
+              <View style={[styles.statusBadge, { backgroundColor: '#bbf7d0' }]}>
+                <Text style={[styles.statusText, { color: '#065f46' }]}>Resolved</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Raise New Complaint Button */}
+          <TouchableOpacity style={styles.raiseButton}>
+            <Text style={styles.raiseButtonText}>+ Raise New Complaint</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: 'white'
+    backgroundColor: 'white',
+  },
+  container: {
+    backgroundColor: 'white',
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24, // ensures no white gap at bottom
+  },
+  welcomeSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   sliderWrapper: {
     height: SLIDER_HEIGHT,
@@ -97,29 +191,81 @@ const styles = StyleSheet.create({
     height: SLIDER_HEIGHT,
     borderRadius: 12,
   },
-  row: {
+  sectionHeader: {
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginTop: 16,
-    gap: 16,
-
+    alignItems: 'center',
   },
-  card: {
-    flex: 1,
-    backgroundColor: '#a8ffb8ff',
-    borderRadius: 12,
-    padding: 12,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
   },
-  cardDesc: {
+  viewAllText: {
+    fontSize: 14,
+    color: '#3b82f6',
+    fontWeight: '500',
+  },
+  complaintCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+    marginHorizontal: 16,
+  },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  iconWrapper: {
+    marginRight: 12,
+    marginTop: 2,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  complaintCategory: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  complaintIssue: {
     fontSize: 13,
-    color: '#4b5563',
+    color: '#374151',
+    marginTop: 2,
+  },
+  submittedText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    marginLeft: 8,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  raiseButton: {
+    backgroundColor: '#2563eb',
+    marginTop: 24,
+    marginHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+  },
+  raiseButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recentComplaintsContainer: {
+    backgroundColor: '#f2f2f7',
+    marginTop: 24,
   },
 });
