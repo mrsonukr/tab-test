@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -94,9 +95,58 @@ const EditProfile: React.FC = () => {
         setErrors((prev) => ({ ...prev, image: 'Only JPEG or PNG images are allowed.' }));
         return;
       }
-      setFormData((prev) => ({ ...prev, newImage: selectedImage }));
+      
+      try {
+        // Compress and convert to WebP
+        const compressedImage = await compressImageToWebP(selectedImage);
+        setFormData((prev) => ({ ...prev, newImage: compressedImage }));
+      } catch (error) {
+        console.error('Image compression error:', error);
+        setErrors((prev) => ({ ...prev, image: 'Failed to process image. Please try another image.' }));
+        return;
+      }
+      
       setErrors((prev) => ({ ...prev, image: undefined }));
     }
+  };
+
+  const compressImageToWebP = async (image: ImagePicker.ImagePickerAsset): Promise<ImagePicker.ImagePickerAsset> => {
+    let quality = 0.8;
+    let compressedImage = image;
+    
+    // Keep compressing until under 200KB or quality gets too low
+    while (quality > 0.1) {
+      const result = await manipulateAsync(
+        compressedImage.uri,
+        [{ resize: { width: 800 } }], // Resize to max 800px width
+        {
+          compress: quality,
+          format: SaveFormat.WEBP,
+        }
+      );
+      
+      // Check file size (approximate)
+      const response = await fetch(result.uri);
+      const blob = await response.blob();
+      const sizeInKB = blob.size / 1024;
+      
+      if (sizeInKB <= 200) {
+        return {
+          ...compressedImage,
+          uri: result.uri,
+          mimeType: 'image/webp',
+        };
+      }
+      
+      quality -= 0.1;
+      compressedImage = {
+        ...compressedImage,
+        uri: result.uri,
+      };
+    }
+    
+    // If still too large, return the last compressed version
+    return compressedImage;
   };
 
   const validateForm = () => {
@@ -126,8 +176,8 @@ const EditProfile: React.FC = () => {
         const formDataToSend = new FormData();
         formDataToSend.append('image', {
           uri: formData.newImage.uri,
-          type: formData.newImage.mimeType || 'image/jpeg',
-          name: `profile.${formData.newImage.mimeType?.split('/')[1] || 'jpg'}`,
+          type: 'image/webp',
+          name: 'profile.webp',
         } as any); // Note: 'as any' is used due to React Native FormData limitations; ideally, use a typed FormData library if available
 
         const uploadResponse = await fetch('https://hostel.mssonukr.workers.dev/', {
@@ -146,17 +196,20 @@ const EditProfile: React.FC = () => {
         }
       }
 
-      // Update profile
+      // Prepare update payload with all student data to avoid NOT NULL constraint errors
+      const updatePayload: Student = {
+        ...student!,
+        mobile_no: formData.mobile_no,
+        email: formData.email || student!.email,
+        profile_pic_url: profilePicUrl,
+      };
+
       const updateResponse = await fetch(
         `https://hostelapis.mssonutech.workers.dev/api/student/${student?.roll_no}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mobile_no: formData.mobile_no,
-            email: formData.email || null,
-            profile_pic_url: profilePicUrl,
-          }),
+          body: JSON.stringify(updatePayload),
         }
       );
 
@@ -165,9 +218,7 @@ const EditProfile: React.FC = () => {
         // Update AsyncStorage
         const updatedStudent: Student = {
           ...student!,
-          mobile_no: formData.mobile_no,
-          email: formData.email,
-          profile_pic_url: profilePicUrl,
+          ...updatePayload,
         };
         await AsyncStorage.setItem('student', JSON.stringify(updatedStudent));
         setStudent(updatedStudent);
